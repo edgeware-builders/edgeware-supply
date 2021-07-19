@@ -1,13 +1,12 @@
 #!/usr/bin/env node
-
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { bnToBn } = require('@polkadot/util/bn');
 const { stringToU8a } = require('@polkadot/util');
 const { u128 } = require('@polkadot/types');
-const { Mainnet } = require('@edgeware/node-types');
+const { spec } = require('@edgeware/node-types');
 
 module.exports = async (req, res) => {
-  const nodeUrl = 'ws://mainnet1.edgewa.re:9944';
+  const nodeUrl = 'wss://mainnet.edgewa.re';
 
   console.log(`Connecting to API for ${nodeUrl}...`);
   let connected;
@@ -21,9 +20,10 @@ module.exports = async (req, res) => {
   // initialize the api
   const api = await ApiPromise.create({
     provider: new WsProvider(nodeUrl),
-    ...Mainnet,
+    ...spec,
   });
   connected = true;
+  console.log('Connected!');
 
   const TREASURY_ACCOUNT = stringToU8a('modlpy/trsry'.padEnd(32, '\0'));
   //
@@ -35,11 +35,15 @@ module.exports = async (req, res) => {
       api.derive.balances.account(TREASURY_ACCOUNT),
       api.rpc.system.properties(),
     ]);
-    const tokenDecimals = properties.tokenDecimals.unwrap().toString(10);
+    const tokenDecimals = properties.tokenDecimals.unwrap()[0].toString(10);
     const issuanceStr = issuance.div(bnToBn(10).pow(bnToBn(tokenDecimals))).toString(10);
     const treasuryStr = treasury.freeBalance.div(bnToBn(10).pow(bnToBn(tokenDecimals))).toString(10);
     const circulatingStr = issuance.sub(treasury.freeBalance).div(bnToBn(10).pow(bnToBn(tokenDecimals))).toString(10);
     res.setHeader('content-type', 'text/plain');
+
+    console.log('Issuance:', issuanceStr);
+    console.log('Treasury:', treasuryStr);
+    console.log('Circulating:', circulatingStr);
 
     if (!!req.query.circulating) {
       res.status(200).send(circulatingStr);
