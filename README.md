@@ -18,9 +18,8 @@ Using https://edgeware-supply.dillchen.now.sh/ will only return the total supply
 ### Installing
 
 - yarn install
-- Set up a Zeit/Now account
+- npm install -g vercel (you may have to set up a Zeit/Now account)
 
 ### Deploying
 
-- git clone this repository
-- `now deploy --prod`
+`vercel deploy --prod`
